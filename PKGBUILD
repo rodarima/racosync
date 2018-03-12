@@ -16,8 +16,8 @@ md5sums=('SKIP')
 package() {
   cd "$srcdir/$pkgname-$pkgver"
   install -Dm755 "racosync" "$pkgdir/usr/bin/racosync"
-  install -Dm622 "racosync.service" "$pkgdir/usr/lib/systemd/user/racosync.service"
-  install -Dm622 "racosync.timer" "$pkgdir/usr/lib/systemd/user/racosync.timer"
+  install -Dm644 "racosync.service" "$pkgdir/usr/lib/systemd/user/racosync.service"
+  install -Dm644 "racosync.timer" "$pkgdir/usr/lib/systemd/user/racosync.timer"
   install -Dm644 "racosync.1" "$pkgdir/usr/share/man/man1/racosync.1"
 }
 
