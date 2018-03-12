@@ -29,12 +29,12 @@ The link will redirect you to a localhost page. Paste the URL in the terminal.
 After a successful login you should be able to see in the log file
 `~/.racosync/log` the first sync files being added:
 
-	1520878971 A /home/rodrigo/q4/raco/cc/notes.pdf
-	1520878974 A /home/rodrigo/q4/raco/ml/ML-MIRI-04.pdf
-	1520878975 A /home/rodrigo/q4/raco/ml/L02.zip
-	1520878976 A /home/rodrigo/q4/raco/ml/ML-MIRI-03.pdf
-	1520878977 A /home/rodrigo/q4/raco/ml/L01.zip
-	1520878978 A /home/rodrigo/q4/raco/ads/ads-miri.pdf
+	1520878971 A /home/joe/raco/cc/notes.pdf
+	1520878974 A /home/joe/raco/ml/ML-MIRI-04.pdf
+	1520878975 A /home/joe/raco/ml/L02.zip
+	1520878976 A /home/joe/raco/ml/ML-MIRI-03.pdf
+	1520878977 A /home/joe/raco/ml/L01.zip
+	1520878978 A /home/joe/raco/ads/ads-miri.pdf
 	...
 
 ### Systemd timer
