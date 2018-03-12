@@ -3,4 +3,4 @@ Description=Racó sync attached files
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/python /home/rodrigo/dev/raco-api/racosync.py
+ExecStart=/usr/bin/racosync
