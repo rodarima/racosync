@@ -1,0 +1,249 @@
+#!/usr/bin/env python
+
+from requests_oauthlib import OAuth2Session
+import json
+import sys
+from datetime import datetime
+import dateutil.parser
+import time
+import os.path
+import string
+
+#import logging
+#
+#try:
+#    import http.client as http_client
+#except ImportError:
+#    # Python 2
+#    import httplib as http_client
+#http_client.HTTPConnection.debuglevel = 1
+#
+## You must initialize logging, otherwise you'll not see debug output.
+#logging.basicConfig()
+#logging.getLogger().setLevel(logging.DEBUG)
+#requests_log = logging.getLogger("requests.packages.urllib3")
+#requests_log.setLevel(logging.DEBUG)
+#requests_log.propagate = True
+
+
+client_id = 'Vk6r8H8mp0QJG9fcQZ1MRzUybd9oq4SPChJHDzzb'
+client_secret = 'gNsY92HKUIh13zwv5YoQPRj6nlQKVesCq0JBhsRit6KcAyIfEkZkPN7HEpLk2MtdDFr4ElSnQonk41TJHtCcc9S3vdKvb9BFNY52ktxYCxqBWMQtc7Qt4ZE08PHDKy7Q'
+scope = ['read']
+
+token_url = 'https://api.fib.upc.edu/v2/o/token'
+refresh_url = 'https://api.fib.upc.edu/v2/o/token'
+base_authorization_url = 'https://api.fib.upc.edu/v2/o/authorize/'
+protected_url = 'https://api.fib.upc.edu/v2/jo/avisos/'
+
+redirect_uri = 'https://localhost:8080/'
+
+from requests_oauthlib import OAuth2Session
+
+class Raco:
+
+	def __init__(self, token_db):
+		self.session = None
+		self.token_db = token_db
+
+	def login(self):
+		try:
+			with open(self.token_db, 'r') as f:
+				token = json.load(f)
+
+			self.load_session(token)
+
+		except FileNotFoundError:
+
+			self.authorize()
+			self.save_token(self.session.token)
+
+	def authorize(self):
+		raco = OAuth2Session(client_id, scope=scope, redirect_uri=redirect_uri)
+		authorization_url, state = raco.authorization_url(base_authorization_url,
+			approval_prompt="auto")
+		print('Please go here and authorize, {}'.format(authorization_url))
+
+		redirect_response = input('Paste the full redirect URL here:')
+		raco.fetch_token(token_url, client_secret=client_secret,
+			authorization_response=redirect_response)
+
+		# Set json response type
+		raco.headers['Accept'] = 'application/json'
+
+		self.session = raco
+	
+	def load_session(self, token):
+		expires_in = int(token['expires_at'] - time.time())
+		#token['expires_in'] = expires_in 
+		#print(token)
+		refresh_args = {'client_id':client_id, 'client_secret':client_secret}
+		self.session = OAuth2Session(client_id,
+			token=token,
+			auto_refresh_url=refresh_url,
+			auto_refresh_kwargs=refresh_args,
+			token_updater=self.save_token)
+
+		self.session.headers['Accept'] = 'application/json'
+
+	def save_token(self, token):
+		#print('Save token called')
+		#token = self.session.token
+		with open(self.token_db, 'w') as f:
+			json.dump(token, f)
+
+	def print_posts(self):
+		res = self.session.get('https://api.fib.upc.edu/v2/jo/avisos/')
+		posts = json.loads(res.content)
+
+		for post in posts['results']:
+			print(post['titol'])
+
+class RacoSync:
+
+	def __init__(self, raco, out_dir, log_file, remove_tail=True):
+		self.raco = raco
+		self.dir = out_dir
+		self.log_file = log_file
+		self.mod = []
+		self.new = []
+		self.remove_tail = remove_tail
+
+
+	def sync(self):
+		if not os.path.isdir(self.dir):
+			os.mkdir(self.dir)
+
+		url = 'https://api.fib.upc.edu/v2/jo/avisos/'
+		s = self.raco.session
+		data = json.loads(s.get(url).content)
+		for element in data['results']:
+			#print("{}: {}".format(element['codi_assig'], element['titol']))
+			self.sync_notice(element)
+
+		#self.report()
+
+	def report(self):
+		if len(self.new) + len(self.mod) == 0:
+			return
+
+		msg = ''
+		now_str = str(datetime.now())
+		msg += now_str + '\n'
+
+		for f in self.new:
+			msg += ' N ' + f + '\n'
+
+		for f in self.mod:
+			msg += ' M ' + f + '\n'
+
+		msg += '\n'
+
+		with open(self.log_file, 'a') as f:
+			f.write(msg)
+
+	def log(self, path, flag):
+		t = int(datetime.now().timestamp())
+		with open(self.log_file, 'a') as f:
+			f.write("{} {} {}\n".format(t, flag, path))
+	
+	def _parse_date(self, s):
+		return dateutil.parser.parse(s)
+
+	def sync_notice(self, notice):
+		course = notice['codi_assig'].lower()
+		if self.remove_tail:
+			course = course.split('-')[0]
+		course_dir = os.path.join(self.dir, course)
+		mod = self._parse_date(notice['data_modificacio'])
+
+		if not os.path.isdir(course_dir):
+			os.mkdir(course_dir)
+
+		self.sync_notice_title(course_dir, notice)
+
+		for a in notice['adjunts']:
+			#print(' + ' + a['nom'])
+			self.sync_attach(course_dir, a)
+
+	def clean_filename(self, value):
+		valid_chars = "-_.()%s%s" % (string.ascii_letters, string.digits)
+		value = ''.join(c if c in valid_chars else '-' for c in value)
+		return value
+
+	def sync_notice_title(self, course_dir, notice):
+		pass
+	
+	def sync_attach(self, course_dir, attach):
+		mod = self._parse_date(attach['data_modificacio'])
+		fn = self.clean_filename(attach['nom'])
+		url = attach['url']
+		fn_path = os.path.join(course_dir, fn)
+		#print(' + ' + fn_path)
+
+		flag = 'A'
+
+		# Already exists
+		if os.path.isfile(fn_path):
+
+			# The file saved is newer or equal than the server
+			if os.path.getmtime(fn_path) >= mod.timestamp():
+				return
+
+			# New version
+			else:
+				self.mod.append(fn_path)
+				flag = 'M'
+
+		# New file
+		else:
+			self.new.append(fn_path)
+		
+		self.update_attach(url, fn_path, mod)
+		self.log(fn_path, flag)
+	
+	def update_attach(self, url, fn_path, mod):
+		r = self.raco.session.get(url, stream=True)
+		with open(fn_path, 'wb') as f:
+			for chunk in r.iter_content(chunk_size=1024*512):
+				if chunk: # filter out keep-alive new chunks
+					f.write(chunk)
+
+		t = mod.timestamp()
+		os.utime(fn_path, (t,t))
+		#print(t, os.path.getmtime(fn_path))
+		#print(fn_path)
+			
+		
+
+if __name__ == '__main__':
+
+	previous_umask = os.umask(0)
+	os.umask(0o077)
+	home_dir = os.path.expanduser('~')
+	config_dir = os.path.join(home_dir, '.racosync')
+
+	if not os.path.isdir(config_dir):
+		os.mkdir(config_dir)
+
+	token_db = os.path.join(config_dir, 'token.json')
+	log_file = os.path.join(config_dir, 'log')
+	config_file = os.path.join(config_dir, 'config.json')
+
+	if not os.path.isfile(log_file):
+		open(log_file, 'a').close()
+
+	os.umask(previous_umask)
+
+	raco = Raco(token_db)
+	raco.login()
+
+	if os.path.isfile(config_file):
+		with open(config_file, 'r') as f:
+			config = json.load(f)
+
+		out_dir = os.path.expanduser(config['out_dir'])
+	else:
+		out_dir = os.path.join(os.getcwd(), 'raco')
+
+	racosync = RacoSync(raco, out_dir, log_file)
+	racosync.sync()

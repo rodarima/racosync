@@ -1,0 +1,11 @@
+[Unit]
+Description=Racó sync timer
+
+[Timer]
+# Execute each 30 minutes
+OnCalendar=*:0/30
+Persistent=true
+Unit=racosync.service
+
+[Install]
+WantedBy=timers.target

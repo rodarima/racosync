@@ -1,0 +1,49 @@
+.TH RACOSYNC "1" "March  2018" "racosync 0.01" "User Commands"
+.SH NAME
+racosync \- syncronize files from raco.fib.upc.edu
+.SH SYNOPSIS
+.B racosync
+.SH DESCRIPTION
+The
+.B racosync
+program search the Racó for new or modified files (attachments) and syncronizes
+the local copy accordinly. It is designed to be launched regularly, with cron or
+systemd timers.
+.P
+.SH FILES
+.SS "~/\&.racosync/config.json"
+.sp
+The output directory to sync is specified in the
+.B config.json
+file. An example configuration will sync the files in the
+.B ~/raco
+folder:
+.IP
+.nf
+ {
+     "out_dir" : "~/raco"
+ }
+.FI
+.SS "~/\&.racosync/log"
+.sp
+Each time a file is added (A) or modified (M), an entry is added to the log
+with the timestamp:
+.IP
+.nf
+1520878971 M /home/joe/raco/cc/notes.pdf
+1520878974 A /home/joe/raco/ml/ML-MIRI-04.pdf
+1520878975 A /home/joe/raco/ml/L02.zip
+.FI
+.SH AUTHOR
+Rodrigo Arias <rodarima@gmail.com>
+.SH "REPORTING BUGS"
+See the Git repository at <https://github.com/rodarima/usbwatch>
+.SH COPYRIGHT
+Copyright \(co 2017 Rodrigo Arias.
+.P
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+.P
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.SH "SEE ALSO"
+udev(7), udevadm(8)
