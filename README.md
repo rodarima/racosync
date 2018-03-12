@@ -37,7 +37,7 @@ After a successful login you should be able to see in the log file
 	1520878978 A /home/joe/raco/ads/ads-miri.pdf
 	...
 
-### Runing
+### Running
 
 To manually syncronize the files just run:
 
