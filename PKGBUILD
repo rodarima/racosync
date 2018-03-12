@@ -15,10 +15,10 @@ md5sums=('SKIP')
 
 package() {
   cd "$srcdir/$pkgname-$pkgver"
-  install -m755 "racosync" "$pkgdir/${PREFIX}/bin/"
-  install -Dm622 "racosync.service" "$pkgdir/${PREFIX}/lib/systemd/user/racosync.service"
-  install -Dm622 "racosync.timer" "$pkgdir/${PREFIX}/lib/systemd/user/racosync.timer"
-  install -Dm644 "racosync.1" "${DESTDIR}${MANPREFIX}/man1/racosync.1"
+  install -Dm755 "racosync" "$pkgdir/usr/bin/racosync"
+  install -Dm622 "racosync.service" "$pkgdir/usr/lib/systemd/user/racosync.service"
+  install -Dm622 "racosync.timer" "$pkgdir/usr/lib/systemd/user/racosync.timer"
+  install -Dm644 "racosync.1" "$pkgdir/usr/share/man/man1/racosync.1"
 }
 
 # vim:set ts=2 sw=2 et:
