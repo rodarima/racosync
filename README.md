@@ -37,7 +37,13 @@ After a successful login you should be able to see in the log file
 	1520878978 A /home/joe/raco/ads/ads-miri.pdf
 	...
 
-### Systemd timer
+### Runing
+
+To manually syncronize the files just run:
+
+	$ racosync
+
+#### Systemd timer
 
 In order to enable the automatic update each 30 minutes, a timer is provided as
 well a a service file. To start the timer execute:
